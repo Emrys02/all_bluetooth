@@ -230,6 +230,14 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                     )
                     return
                 }
+                if (!::sendReceive.isInitialized) {
+                    result.error(
+                        "404",
+                        "No active connection",
+                        "Please establish a connection first using start_server or connect_to_device."
+                    )
+                    return
+                }
                 val message = call.arguments as ByteArray
                 val messageSent = sendReceive.sendMessage(message)
                 result.success(messageSent)
@@ -329,7 +337,26 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                             try {
                                 sendReceive = SendReceive(socket)
                                 sendReceive.start()
+                                
+                                // Notify Flutter that a client has connected
+                                runOnUiThread {
+                                    val response = getConnectionMessage(
+                                        status = true,
+                                        message = "Client connected",
+                                        device = socket.remoteDevice
+                                    )
+                                    connectionStateSink?.success(response)
+                                }
                             } catch (e: IOException) {
+                                // Notify Flutter that connection failed
+                                runOnUiThread {
+                                    val response = getConnectionMessage(
+                                        status = false,
+                                        message = "Connection failed: ${e.message}",
+                                        device = socket.remoteDevice
+                                    )
+                                    connectionStateSink?.success(response)
+                                }
                                 return
                             }
                         }
@@ -358,7 +385,26 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
 
                     sendReceive = SendReceive(socket)
                     sendReceive.start()
+                    
+                    // Notify Flutter that connection is established
+                    runOnUiThread {
+                        val response = getConnectionMessage(
+                            status = true,
+                            message = "Connected to ${device.name ?: device.address}",
+                            device = device
+                        )
+                        connectionStateSink?.success(response)
+                    }
                 } catch (e: IOException) {
+                    // Notify Flutter that connection failed
+                    runOnUiThread {
+                        val response = getConnectionMessage(
+                            status = false,
+                            message = "Connection failed: ${e.message}",
+                            device = device
+                        )
+                        connectionStateSink?.success(response)
+                    }
                     return
                 }
             }
