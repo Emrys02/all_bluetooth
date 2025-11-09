@@ -1,6 +1,6 @@
 name: all_bluetooth
 description: "This plugin that allows to implement bluetooth features. Listen to bluetooth state, connecting to devices, sending data etc"
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/rans-rans/all_bluetooth
 
 environment:
