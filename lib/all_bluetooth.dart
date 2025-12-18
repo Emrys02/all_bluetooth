@@ -3,9 +3,7 @@ library all_bluetooth;
 import 'all_bluetooth_platform_interface.dart';
 
 part 'helper_functions.dart';
-
 part "package:all_bluetooth/entities/bluetooth_device.dart";
-
 part "package:all_bluetooth/entities/connection_result.dart";
 
 class AllBluetooth {
@@ -46,6 +44,18 @@ class AllBluetooth {
   Future<bool> isBluetoothOn() async {
     final isActive = await instance.isBluetoothOn();
     return isActive;
+  }
+
+  /// This function returns the name of your device's bluetooth
+  Future<String> getBluetoothName() {
+    return instance.getBluetoothName();
+  }
+
+  /// This function is used to change the name of your device's bluetooth
+  ///
+  /// This function returns true if the name was changed successfully and false if it wasn't
+  Future<bool> changeBluetoothName(String name) {
+    return instance.changeBluetoothName(name);
   }
 
   /// This function is used to open a server socket if you want to connect as a server. The opened socket

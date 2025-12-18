@@ -34,6 +34,10 @@ abstract class AllBluetoothPlatform extends PlatformInterface {
 
   Future<bool> isBluetoothOn();
 
+  Future<String> getBluetoothName();
+
+  Future<bool> changeBluetoothName(String name);
+
   Future<void> startBluetoothServer();
 
   Future<void> startAdvertising({int? secondDuration});

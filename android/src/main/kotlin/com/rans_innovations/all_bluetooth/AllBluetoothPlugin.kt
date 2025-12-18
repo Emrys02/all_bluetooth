@@ -193,6 +193,17 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                 result.success(isBluetoothOn)
             }
 
+            "get_bluetooth_name" -> {
+                val name = bluetoothAdapter.name
+                result.success(name)
+            }
+
+            "change_bluetooth_name" -> {
+                val name = call.arguments as String
+                val isChanged = bluetoothAdapter.setName(name)
+                result.success(isChanged)
+            }
+
             "start_server" -> {
                 if (!bluetoothAdapter.isEnabled) {
                     result.error(

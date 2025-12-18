@@ -10,8 +10,7 @@ import 'all_bluetooth_platform_interface.dart';
 class MethodChannelAllBluetooth extends AllBluetoothPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel =
-      const MethodChannel('com.rans_innovations/all_bluetooth');
+  final methodChannel = const MethodChannel('com.rans_innovations/all_bluetooth');
 
   final bluetoothChangeEvent = const EventChannel("bluetooth_change_event");
   final connectionChange = const EventChannel("connection_change_event");
@@ -30,8 +29,7 @@ class MethodChannelAllBluetooth extends AllBluetoothPlatform {
 
   @override
   Future<List<BluetoothDevice>> getBondedDevices() async {
-    final response =
-        await methodChannel.invokeMethod("get_bonded_devices") as List<Object?>;
+    final response = await methodChannel.invokeMethod("get_bonded_devices") as List<Object?>;
     final devices = response.map(BluetoothDevice.fromMap);
     return devices.toList();
   }
@@ -47,6 +45,18 @@ class MethodChannelAllBluetooth extends AllBluetoothPlatform {
   }
 
   @override
+  Future<String> getBluetoothName() async {
+    final response = await methodChannel.invokeMethod("get_bluetooth_name");
+    return response;
+  }
+
+  @override
+  Future<bool> changeBluetoothName(String name) async {
+    final response = await methodChannel.invokeMethod("change_bluetooth_name", name);
+    return response;
+  }
+
+  @override
   Future<void> startBluetoothServer({int? timeout}) async {
     methodChannel.invokeMethod("start_server", timeout);
   }
@@ -58,8 +68,7 @@ class MethodChannelAllBluetooth extends AllBluetoothPlatform {
 
   @override
   Future<bool> sendMessage(List<int> message) async {
-    final response = await methodChannel.invokeMethod(
-        "send_message", Uint8List.fromList(message)) as bool;
+    final response = await methodChannel.invokeMethod("send_message", Uint8List.fromList(message)) as bool;
     return response;
   }
 
@@ -77,8 +86,7 @@ class MethodChannelAllBluetooth extends AllBluetoothPlatform {
   Stream<BluetoothDevice> get discoverDevices {
     final stream = foundDeviceEvent.receiveBroadcastStream().map(
       (event) {
-        final data =
-            HelperFunctions.convertToMap(event as Map<Object?, Object?>);
+        final data = HelperFunctions.convertToMap(event as Map<Object?, Object?>);
         final device = BluetoothDevice.fromMap(data);
         return device;
       },
@@ -97,8 +105,7 @@ class MethodChannelAllBluetooth extends AllBluetoothPlatform {
   @override
   Stream<ConnectionResult> get listenForConnection {
     final stream = connectionChange.receiveBroadcastStream().map((event) {
-      final data =
-          HelperFunctions.convertToMap((event as Map<Object?, Object?>));
+      final data = HelperFunctions.convertToMap((event as Map<Object?, Object?>));
       final connectionResult = ConnectionResult.fromMap(data);
       return connectionResult;
     });
