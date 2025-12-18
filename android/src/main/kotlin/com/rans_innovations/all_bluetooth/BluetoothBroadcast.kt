@@ -37,7 +37,9 @@ class BluetoothBroadcast(
 
             BluetoothDevice.ACTION_ACL_CONNECTED -> {
                 Log.d("Connection changed", "Connected to ${device?.name?:"Unknown device"}")
-                listenToConnection(device, true)
+                if (device?.bondState == BluetoothDevice.BOND_BONDED) {
+                    listenToConnection(device, true)
+                }
             }
 
             BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
