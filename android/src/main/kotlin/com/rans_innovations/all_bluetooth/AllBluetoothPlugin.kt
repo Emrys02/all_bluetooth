@@ -19,13 +19,18 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import java.io.IOException
 import java.util.*
 
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import android.app.Activity
+
 /** AllBluetoothPlugin */
-class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
+class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private val connectionUUID = UUID.fromString("38d00467-9f10-4e96-b045-d9b69303fa33")
 
     private lateinit var context: Context
     private lateinit var methodChannel: MethodChannel
+    private var activity: Activity? = null
 
     private lateinit var bluetoothChangeEvent: EventChannel
     private lateinit var connectionChangeEvent: EventChannel
@@ -154,10 +159,7 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
         context.registerReceiver(broadcastReceiver, filter)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterReceiver(broadcastReceiver)
-    }
+
 
 
     @SuppressLint("RestrictedApi")
@@ -279,8 +281,7 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                     )
                 }
 
-                ContextUtils.getActivity(this)
-                    ?.startActivityForResult(discoverableIntent, requestCode)
+                activity?.startActivityForResult(discoverableIntent, requestCode)
             }
         }
     }
@@ -292,11 +293,31 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
         connectionChangeEvent.setStreamHandler(null)
         foundDeviceEvent.setStreamHandler(null)
         sendReceiveEvent.setStreamHandler(null)
+
+        try {
+            context.unregisterReceiver(broadcastReceiver)
+        } catch (e: Exception) {
+            // Ignore if not registered
+        }
+        closeConnection()
     }
 
-    override fun onStop() {
-        super.onStop()
-        closeConnection()
+
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        this.activity = binding.activity
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        this.activity = null
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        this.activity = binding.activity
+    }
+
+    override fun onDetachedFromActivity() {
+        this.activity = null
     }
 
 
@@ -350,7 +371,7 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                                 sendReceive.start()
                                 
                                 // Notify Flutter that a client has connected
-                                runOnUiThread {
+                                activity?.runOnUiThread {
                                     val response = getConnectionMessage(
                                         status = true,
                                         message = "Client connected",
@@ -360,7 +381,7 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                                 }
                             } catch (e: IOException) {
                                 // Notify Flutter that connection failed
-                                runOnUiThread {
+                                activity?.runOnUiThread {
                                     val response = getConnectionMessage(
                                         status = false,
                                         message = "Connection failed: ${e.message}",
@@ -398,7 +419,7 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                     sendReceive.start()
                     
                     // Notify Flutter that connection is established
-                    runOnUiThread {
+                    activity?.runOnUiThread {
                         val response = getConnectionMessage(
                             status = true,
                             message = "Connected to ${device.name ?: device.address}",
@@ -408,7 +429,7 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                     }
                 } catch (e: IOException) {
                     // Notify Flutter that connection failed
-                    runOnUiThread {
+                    activity?.runOnUiThread {
                         val response = getConnectionMessage(
                             status = false,
                             message = "Connection failed: ${e.message}",
@@ -445,7 +466,7 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                             message = e.message,
                             device = null
                         )
-                        runOnUiThread { connectionStateSink?.success(response) }
+                        activity?.runOnUiThread { connectionStateSink?.success(response) }
                         break
                     }
 
@@ -457,14 +478,14 @@ class AllBluetoothPlugin : FlutterPlugin, MethodCallHandler, FlutterActivity() {
                             "status" to true
                         )
 
-                    runOnUiThread { sendReceiveSink?.success(response) }
+                    activity?.runOnUiThread { sendReceiveSink?.success(response) }
                 } catch (e: Exception) {
                     val response = getConnectionMessage(
                         status = false,
                         message = e.message,
                         device = socket.remoteDevice
                     )
-                    runOnUiThread { connectionStateSink?.success(response) }
+                    activity?.runOnUiThread { connectionStateSink?.success(response) }
                 }
 
             }
